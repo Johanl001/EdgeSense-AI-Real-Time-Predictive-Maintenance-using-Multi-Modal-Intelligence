@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    volumes:
+      - ./backend:/app
+      - edgesense_data:/app/app   # ← named volume ensures the directory exists
+
+  frontend:
+    build:
+      context: ./next_frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./next_frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  edgesense_data:
