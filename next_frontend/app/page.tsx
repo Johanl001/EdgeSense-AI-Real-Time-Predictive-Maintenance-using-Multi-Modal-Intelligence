@@ -65,6 +65,31 @@ export default function Dashboard() {
 
   const criticalAlerts = liveAlerts.filter((a) => a.severity === "critical").slice(0, 2)
 
+  const handleExport = () => {
+    const headers = ["ID", "Name", "Location", "Type", "Status", "Health Score", "RPM", "Temp (°C)"]
+    const rows = fleetMachines.map((m) => [
+      m.id,
+      `"${m.name}"`,
+      `"${m.location}"`,
+      m.type,
+      m.status,
+      m.health,
+      m.rpm,
+      m.temp,
+    ])
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", "machine_report_edgesense.csv")
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <AppShell>
       <PageHeader
@@ -73,7 +98,10 @@ export default function Dashboard() {
         description="EdgeSense is analyzing 128 acoustic and vibration streams across your fleet. The ML runtime is stable and predictions are flowing at sub-10ms latency."
         actions={
           <>
-            <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-accent/70 border border-border text-xs font-medium text-foreground hover:bg-accent transition">
+            <button 
+              onClick={handleExport}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-accent/70 border border-border text-xs font-medium text-foreground hover:bg-accent transition"
+            >
               <Download className="w-3.5 h-3.5" />
               Export report
             </button>

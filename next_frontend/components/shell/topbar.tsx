@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Search, Bell, Cpu, Waves, Wifi } from "lucide-react"
 
 export function Topbar() {
@@ -62,13 +63,14 @@ export function Topbar() {
               UTC · Live Telemetry
             </span>
           </div>
-          <button
+          <Link
+            href="/alerts"
             className="relative grid place-items-center w-9 h-9 rounded-xl bg-accent/60 border border-border/60 hover:bg-accent transition-colors"
             aria-label="Open alerts"
           >
             <Bell className="w-4 h-4 text-foreground" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-status-crit animate-pulse-ring" />
-          </button>
+          </Link>
           <div className="flex items-center gap-2 pl-2 border-l border-border/60">
             <div className="relative">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-violet-500 grid place-items-center font-display text-xs font-semibold text-background">

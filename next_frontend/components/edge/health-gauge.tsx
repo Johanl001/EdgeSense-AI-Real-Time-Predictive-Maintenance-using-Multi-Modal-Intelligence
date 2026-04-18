@@ -16,64 +16,89 @@ export function HealthGauge({
   label = "Fleet Health",
   sublabel = "Composite score · all assets",
 }: Props) {
-  const stroke = 18
-  const radius = (size - stroke) / 2 - 6
-  const cx = size / 2
-  const cy = size / 2
-  const startAngle = 135
-  const endAngle = 405 // 270deg sweep
-  const sweep = endAngle - startAngle
+  const stroke = 18;
+  const radius = (size - stroke) / 2 - 6;
+  const cx = size / 2;
+  const cy = size / 2;
+  const startAngle = 135;
+  const endAngle = 405; // 270deg sweep
+  const sweep = endAngle - startAngle;
 
+  // ── Polar helper.
+  // Intentionally NOT rounding here — framer-motion animates these values and
+  // rounding during SSR vs client produces the float-precision mismatch.
+  // We suppress the tiny discrepancy with suppressHydrationWarning on the svg.
   const polar = (angle: number) => {
-    const rad = (angle * Math.PI) / 180
-    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) }
-  }
+    const rad = (angle * Math.PI) / 180;
+    return {
+      x: cx + radius * Math.cos(rad),
+      y: cy + radius * Math.sin(rad),
+    };
+  };
 
   const arcPath = (a0: number, a1: number) => {
-    const p0 = polar(a0)
-    const p1 = polar(a1)
-    const large = a1 - a0 > 180 ? 1 : 0
-    return `M ${p0.x} ${p0.y} A ${radius} ${radius} 0 ${large} 1 ${p1.x} ${p1.y}`
-  }
+    const p0 = polar(a0);
+    const p1 = polar(a1);
+    const large = a1 - a0 > 180 ? 1 : 0;
+    return `M ${p0.x} ${p0.y} A ${radius} ${radius} 0 ${large} 1 ${p1.x} ${p1.y}`;
+  };
 
-  const mv = useMotionValue(0)
-  const [display, setDisplay] = useState(0)
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
 
   useEffect(() => {
     const controls = animate(mv, value, {
       duration: 1.2,
       ease: [0.22, 1, 0.36, 1],
-    })
-    const unsub = mv.on("change", (v) => setDisplay(Math.round(v)))
+    });
+    const unsub = mv.on("change", (v) => setDisplay(Math.round(v)));
     return () => {
-      controls.stop()
-      unsub()
-    }
-  }, [value, mv])
+      controls.stop();
+      unsub();
+    };
+  }, [value, mv]);
 
-  const arcLen = useTransform(mv, (v) => (v / 100) * sweep)
-  const endForValue = useTransform(arcLen, (l) => startAngle + l)
-  const [endAngleVal, setEndAngleVal] = useState(startAngle)
+  const arcLen = useTransform(mv, (v) => (v / 100) * sweep);
+  const endForValue = useTransform(arcLen, (l) => startAngle + l);
+  const [endAngleVal, setEndAngleVal] = useState(startAngle);
+
   useEffect(() => {
-    const unsub = endForValue.on("change", setEndAngleVal)
-    return () => unsub()
-  }, [endForValue])
+    const unsub = endForValue.on("change", setEndAngleVal);
+    return () => unsub();
+  }, [endForValue]);
 
-  const pointer = polar(endAngleVal)
+  // ── Key fix: tick marks use floating-point trig which differs slightly
+  // between Node.js (SSR) and V8 (browser). We render them only on the client
+  // by gating on a mounted flag so SSR outputs nothing for them.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const pointer = polar(endAngleVal);
 
   const tone =
-    display >= 85 ? "ok" : display >= 65 ? "warn" : display >= 40 ? "alert" : "crit"
+    display >= 85 ? "ok" : display >= 65 ? "warn" : display >= 40 ? "alert" : "crit";
 
   const toneColor = {
     ok: "#22C55E",
     warn: "#EAB308",
     alert: "#F97316",
     crit: "#EF4444",
-  }[tone]
+  }[tone];
 
   return (
     <div className="relative flex flex-col items-center" style={{ width: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+      {/*
+        suppressHydrationWarning on the svg allows React to silently accept the
+        tiny floating-point differences in animated path/coordinate attributes
+        that framer-motion writes after hydration.
+      */}
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="overflow-visible"
+        suppressHydrationWarning
+      >
         <defs>
           <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#7DD3FC" />
@@ -106,29 +131,33 @@ export function HealthGauge({
           strokeLinecap="round"
         />
 
-        {/* Tick marks */}
-        {Array.from({ length: 28 }).map((_, i) => {
-          const a = startAngle + (i / 27) * sweep
-          const p1 = polar(a)
-          const rInner = radius + 16
-          const rad = (a * Math.PI) / 180
-          const p2 = {
-            x: cx + rInner * Math.cos(rad),
-            y: cy + rInner * Math.sin(rad),
-          }
-          const active = a <= endAngleVal
-          return (
-            <line
-              key={i}
-              x1={p1.x}
-              y1={p1.y}
-              x2={p2.x}
-              y2={p2.y}
-              stroke={active ? "rgba(14,165,233,0.7)" : "rgba(148,163,184,0.18)"}
-              strokeWidth={1.25}
-            />
-          )
-        })}
+        {/*
+          Tick marks — rendered only after mount to avoid SSR/client
+          floating-point trig mismatch (the root cause of the hydration error).
+        */}
+        {mounted &&
+          Array.from({ length: 28 }).map((_, i) => {
+            const a = startAngle + (i / 27) * sweep;
+            const p1 = polar(a);
+            const rInner = radius + 16;
+            const rad = (a * Math.PI) / 180;
+            const p2 = {
+              x: cx + rInner * Math.cos(rad),
+              y: cy + rInner * Math.sin(rad),
+            };
+            const active = a <= endAngleVal;
+            return (
+              <line
+                key={i}
+                x1={p1.x}
+                y1={p1.y}
+                x2={p2.x}
+                y2={p2.y}
+                stroke={active ? "rgba(14,165,233,0.7)" : "rgba(148,163,184,0.18)"}
+                strokeWidth={1.25}
+              />
+            );
+          })}
 
         {/* Active arc */}
         <motion.path
@@ -181,5 +210,5 @@ export function HealthGauge({
         </span>
       </div>
     </div>
-  )
+  );
 }

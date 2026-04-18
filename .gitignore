@@ -1,5 +1,5 @@
 # =========================
-# Operating System Files
+# Operating System & Executable Files
 # =========================
 .DS_Store
 .DS_Store?
@@ -9,6 +9,8 @@
 ehthumbs.db
 Thumbs.db
 Desktop.ini
+*.exe
+
 
 # =========================
 # Node.js / Frontend (React / Next.js / Vite)
@@ -101,6 +103,11 @@ dataset/
 data/
 *.db
 *.sqlite3
+
+# Explicitly keep compiled models in the backend
+!backend/app/models/*.onnx
+!backend/app/models/*.pkl
+!backend/app/models/*.json
 
 # =========================
 # PlatformIO / Firmware (C++ / ESP32)
