@@ -9,8 +9,9 @@ import { StatusCard } from "@/components/edge/status-card"
 import { LiveTicker } from "@/components/edge/live-ticker"
 import { SectionCard } from "@/components/edge/section-card"
 import { AlertCard } from "@/components/edge/alert-card"
-import { machines as initialMachines, alerts as initialAlerts } from "@/lib/mock-data"
+import { machines as initialMachines, alerts as initialAlerts, type Machine } from "@/lib/mock-data"
 import { useWebSocket } from "@/hooks/use-websocket"
+import { toast } from "sonner"
 import {
   Activity,
   CircuitBoard,
@@ -88,6 +89,27 @@ export default function Dashboard() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    toast.success("CSV Export Successful", {
+      description: `Downloaded telemetry report for ${fleetMachines.length} machines.`,
+    })
+  }
+
+  const handleAddMachine = () => {
+    const newMachine: Machine = {
+      id: `MX-${Math.floor(Math.random() * 9000) + 1000}`,
+      name: `New Asset ${Math.floor(Math.random() * 100)}`,
+      location: "Line 04 · Bay 2",
+      type: "Generic",
+      status: "normal",
+      health: 100,
+      lastSeen: "just now",
+      rpm: 0,
+      temp: 24,
+    }
+    setFleetMachines((prev) => [newMachine, ...prev])
+    toast.success("Machine provisioned successfully", {
+      description: `${newMachine.name} [${newMachine.id}] added to the fleet. Telemetry stream will initialize shortly.`,
+    })
   }
 
   return (
@@ -105,7 +127,10 @@ export default function Dashboard() {
               <Download className="w-3.5 h-3.5" />
               Export report
             </button>
-            <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition glow-primary">
+            <button 
+              onClick={handleAddMachine}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition glow-primary"
+            >
               <Plus className="w-3.5 h-3.5" />
               Add machine
             </button>

@@ -4,26 +4,32 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
     environment:
       - PORT=8000
+      - DEV=true
     volumes:
       - ./backend:/app
-      - edgesense_data:/app/app   # ← named volume ensures the directory exists
+      - edgesense_data:/app/data
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
       context: ./next_frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "0.0.0.0:3000:3000"
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws/stream
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     volumes:
       - ./next_frontend:/app
       - /app/node_modules
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   edgesense_data:

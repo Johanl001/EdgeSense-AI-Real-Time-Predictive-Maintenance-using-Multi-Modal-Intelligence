@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Space_Grotesk } from "next/font/google"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <Toaster />
         {/*
           Vercel Analytics removed — it is a no-op outside Vercel deployments
           and was generating a console warning in the Docker dev environment.

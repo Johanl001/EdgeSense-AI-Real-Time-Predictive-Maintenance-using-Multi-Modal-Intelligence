@@ -129,7 +129,7 @@ class AudioFeatures(BaseModel):
     spectral_centroid: float = Field(..., description="Spectral centroid in Hz")
     dominant_freq: float = Field(0.0, description="Audio dominant frequency")
     energy: float = Field(0.0, description="Short-time energy")
-
+    rms: Optional[float] = Field(None, description="Audio RMS from mic — added by ESP32 firmware")
 
 class SensorPayload(BaseModel):
     timestamp: Optional[str] = Field(None, description="ISO-8601 timestamp; auto-filled if absent")
