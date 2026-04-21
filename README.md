@@ -1,6 +1,9 @@
 # EdgeSense AI 🏭⚡
 
-![EdgeSense AI Dashboard Preview](./next_frontend/public/dashboard_preview.png)
+<img width="1871" height="873" alt="Screenshot 2026-04-21 192311" src="https://github.com/user-attachments/assets/fed21397-f8c1-44d9-a2fa-fd94c4d29161" />
+
+<img width="1706" height="837" alt="Screenshot 2026-04-20 134311" src="https://github.com/user-attachments/assets/a6baa758-8d8a-4f5b-b6a7-f1dec300e1c5" />
+
 
 **Real-Time Predictive Maintenance using Multi-Modal Intelligence. Hackathon Edition 2026.**
 
