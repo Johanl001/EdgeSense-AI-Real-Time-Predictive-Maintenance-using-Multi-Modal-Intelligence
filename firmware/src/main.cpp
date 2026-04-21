@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#include <Arduin
 #include <Wire.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -7,9 +7,9 @@
 struct VibData { float rms, peak, kurtosis, crest_factor, dominant_freq; };
 
 // ── Config ──────────────────────────────────────────────
-const char* ssid       = "DNITRO_111 6530";
-const char* password   = "11223344";
-const char* serverUrl  = "http://192.168.1.15:8000/api/predict";
+const char* ssid       = "your hotspot name";
+const char* password   = "your hotspot password";
+const char* serverUrl  = "http://[IP_ADDRESS]/api/predict";
 
 #define MIC_PIN        34
 #define SAMPLES        512      // samples per audio window

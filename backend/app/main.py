@@ -129,7 +129,7 @@ class AudioFeatures(BaseModel):
     spectral_centroid: float = Field(..., description="Spectral centroid in Hz")
     dominant_freq: float = Field(0.0, description="Audio dominant frequency")
     energy: float = Field(0.0, description="Short-time energy")
-    rms: Optional[float] = Field(None, description="Audio RMS from mic — added by ESP32 firmware")
+    rms: Optional[float] = Field(None, description="Audio RMS from mic — added by ESP32 firmware")  
 
 class SensorPayload(BaseModel):
     timestamp: Optional[str] = Field(None, description="ISO-8601 timestamp; auto-filled if absent")
@@ -292,9 +292,9 @@ class AIEngine:
         aud = payload.audio
 
         # Feature-level anomaly scores (0 = normal, 1 = severe fault)
-        kurt_score  = min(1.0, max(0.0, (vib.kurtosis - 3.0) / 7.0))   # 3=Gaussian baseline
+        kurt_score  = min(1.0, max(0.0, (vib.kurtosis - 3.0) / 7.0))
         cf_score    = min(1.0, max(0.0, (vib.crest_factor - 2.0) / 6.0))
-        rms_score   = min(1.0, max(0.0, (vib.rms - 0.05) / 0.45))       # g-unit baseline
+        rms_score   = min(1.0, max(0.0, (vib.rms - 0.40) / 0.60))  # 0.40g is normal for synthetic       # g-unit baseline
         mfcc_energy = float(np.sum(np.abs(aud.mfcc[1:])))               # exclude MFCC-0 (energy)
         audio_score = min(1.0, max(0.0, (mfcc_energy - 10.0) / 40.0))
 
@@ -303,7 +303,7 @@ class AIEngine:
         # Bearing defect frequencies typically appear at non-integer multiples
         # Unbalance: at 1× rotation; Misalignment: at 2× rotation
         is_integer_harmonic = any(
-            abs(freq % base) < 5 for base in [25, 50, 60, 100]
+            abs(freq % base) < 3 for base in [25, 50, 60, 100]
         )
 
         # Class probability estimation (soft rules)
@@ -313,7 +313,7 @@ class AIEngine:
         p_misalign   = min(1.0, max(0.0, rms_score * 0.5 + cf_score * 0.3 - kurt_score * 0.2))
 
         raw_probs = np.array([p_normal, p_bearing, p_unbalance, p_misalign], dtype=np.float32)
-        probs     = self._softmax(raw_probs * 3.0)  # sharpen
+        probs     = self._softmax(raw_probs * 8.0)  # sharpen aggressively
 
         fault_idx   = int(np.argmax(probs))
         confidence  = float(probs[fault_idx])
@@ -434,14 +434,10 @@ class AIEngine:
     # ------------------------------------------------------------------
 
     def _compute_health_score(self, probs: np.ndarray, vib: VibrationFeatures) -> float:
-        """
-        Health Score = 100 × (1 − weighted_fault_probability)
-        Weighted by fault severity: Normal=0, Unbalance=0.4, Misalignment=0.6, Bearing=1.0
-        """
-        severity_weights = np.array([0.0, 1.0, 0.4, 0.6])
+        severity_weights = np.array([0.0, 1.0, 0.5, 0.7])
         fault_severity   = float(np.dot(probs, severity_weights))
-        # Penalise high RMS independently
-        rms_penalty = min(0.2, max(0.0, (vib.rms - 0.3) / 1.0))
+        # Only penalise truly extreme RMS — above 0.8g
+        rms_penalty = min(0.15, max(0.0, (vib.rms - 0.80) / 1.0))
         raw_score   = (1.0 - fault_severity) - rms_penalty
         return round(max(0.0, min(100.0, raw_score * 100.0)), 2)
 
