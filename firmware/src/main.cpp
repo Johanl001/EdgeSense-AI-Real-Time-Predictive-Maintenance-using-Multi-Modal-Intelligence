@@ -9,7 +9,7 @@ struct VibData { float rms, peak, kurtosis, crest_factor, dominant_freq; };
 // ── Config ──────────────────────────────────────────────
 const char* ssid       = "your hotspot name";
 const char* password   = "your hotspot password";
-const char* serverUrl  = "http://[IP_ADDRESS]/api/predict";
+const char* serverUrl  =  "https://edgesense-api.onrender.com/api/predict";
 
 #define MIC_PIN        34
 #define SAMPLES        512      // samples per audio window
