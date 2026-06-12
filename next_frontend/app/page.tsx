@@ -25,7 +25,8 @@ import {
 import Link from "next/link"
 
 export default function Dashboard() {
-  const { data: wsData, isConnected } = useWebSocket("ws://127.0.0.1:8000/ws/stream")
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? "ws://127.0.0.1:8000/ws/stream"
+  const { data: wsData, isConnected } = useWebSocket(wsUrl)
   const [fleetMachines, setFleetMachines] = useState(initialMachines)
   const [liveAlerts, setLiveAlerts] = useState(initialAlerts)
   const [healthScore, setHealthScore] = useState(87)

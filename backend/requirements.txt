@@ -2,10 +2,8 @@ fastapi
 uvicorn[standard]
 websockets
 onnxruntime
-shap
 numpy
 scipy
 scikit-learn
-torch
-torchvision
 pydantic
+joblib
